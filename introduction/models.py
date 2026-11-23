@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.auth.hashers import check_password, make_password
 from django.core.validators import MaxValueValidator
 from django.db import models
 
@@ -92,6 +93,12 @@ class CSRF_user_tbl(models.Model):
     password = models.CharField(max_length=200)
     balance = models.IntegerField(default=0)
     is_loggedin = models.BooleanField(default=False)
-    
+
+    def set_password(self, raw_password):
+        self.password = make_password(raw_password)
+
+    def check_password(self, raw_password):
+        return check_password(raw_password, self.password)
+
     def __str__(self):
         return self.username

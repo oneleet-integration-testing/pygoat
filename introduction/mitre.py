@@ -1,7 +1,6 @@
 import datetime
 import re
 import subprocess
-from hashlib import md5
 
 import jwt
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
@@ -158,9 +157,11 @@ def csrf_lab_login(request):
     elif request.method == 'POST':
         password = request.POST.get('password')
         username = request.POST.get('username')
-        password = md5(password.encode()).hexdigest()
-        User = CSRF_user_tbl.objects.filter(username=username, password=password)
-        if User:
+        if not username or not password:
+            return redirect('/mitre/9/lab/login')
+
+        user = CSRF_user_tbl.objects.filter(username=username).first()
+        if user and user.check_password(password):
             payload ={
                 'username': username,
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=300),
@@ -170,8 +171,7 @@ def csrf_lab_login(request):
             response = redirect("/mitre/9/lab/transaction")
             response.set_cookie('auth_cookiee', cookie)
             return response
-        else :
-            return redirect('/mitre/9/lab/login')
+        return redirect('/mitre/9/lab/login')
 
 @authentication_decorator
 @csrf_exempt
